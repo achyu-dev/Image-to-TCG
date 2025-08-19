@@ -42,6 +42,10 @@
   ```bash
   pip install -r requirements.txt
   ```
+- Run pre-commit
+  ```bash
+  pre-commit run --all-files
+  ```
 
 ### Environment Setup
 
