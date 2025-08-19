@@ -5,14 +5,14 @@ import base64
 
 # Function to encode images to Base64
 def encode_image_to_base64(image_file):
-    return base64.b64encode(image_file.read()).decode('utf-8')
+    return base64.b64encode(image_file.read()).decode("utf-8")
+
 
 # Page config
 st.set_page_config(
     page_title="Test Case Generator",
     page_icon="🤖",
     layout="wide",
-    
 )
 
 # Streamlit App
@@ -20,12 +20,19 @@ st.title("IMG2Case")
 st.markdown("---")
 
 # Image upload
-uploaded_files = st.file_uploader("Upload Screenshot(s) or image(s)", type=['png', 'jpeg', 'jpg'], accept_multiple_files=True)
+uploaded_files = st.file_uploader(
+    "Upload Screenshot(s) or image(s)",
+    type=["png", "jpeg", "jpg"],
+    accept_multiple_files=True,
+)
 
 st.markdown("---")
 
-# Optional text input for context
-optional_text = st.text_area("Optional Text Context:", placeholder="Enter any additional context for the test cases...")
+# Optional text input for context (to be removed later)
+optional_text = st.text_area(
+    "Optional Text Context:",
+    placeholder="Enter any additional context for the test cases...",
+)
 
 # Sidebar to display uploaded images
 if uploaded_files:
@@ -45,17 +52,16 @@ if st.button("Generate", disabled=generate_button_disabled):
     images_data = []
     for image_file in uploaded_files:
         encoded_image = encode_image_to_base64(image_file)
-        images_data.append({
-            "media_type": f"image/{image_file.type.split('/')[-1]}",
-            "data": encoded_image
-        })
-        #print(f"Encoded image: {encoded_image}...")
+        images_data.append(
+            {
+                "media_type": f"image/{image_file.type.split('/')[-1]}",
+                "data": encoded_image,
+            }
+        )
+        # print(f"Encoded image: {encoded_image}...")
 
     # Construct payload for the API call
-    payload = {
-        "images": images_data,
-        "text": optional_text
-    }
+    payload = {"images": images_data, "text": optional_text}
 
     # Make API call to Gemini
     api_url = "http://localhost:8000/gemini-generate"

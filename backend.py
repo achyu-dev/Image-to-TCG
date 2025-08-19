@@ -3,7 +3,11 @@ import boto3
 import botocore.config
 
 # Initialize AWS client for Bedrock
-bedrock_client = boto3.client('bedrock-runtime',region_name="us-east-1",config=botocore.config.Config(read_timeout=300,retries={'max_attempts':3}))
+bedrock_client = boto3.client(
+    "bedrock-runtime",
+    region_name="us-east-1",
+    config=botocore.config.Config(read_timeout=300, retries={"max_attempts": 3}),
+)
 
 prompt = """
 I am an experienced software tester tasked with creating comprehensive test cases for various functionalities of a digital product. I will provide you with multiple examples of test cases. Please follow these examples to generate similar detailed and professional test cases for the features visible in the provided screenshots.
@@ -69,63 +73,59 @@ Expected Result: A confirmation message is displayed, and the profile informatio
 Now, using the provided screenshots, generate detailed test cases following the format and structure of these examples. Ensure each test case includes a clear Description, Pre-conditions, Testing Steps, and Expected Result.
 """
 
+
 def lambda_handler(event, context):
     # Extract images from the input payload
     try:
-        body = json.loads(event['body'])
-        images = body.get('images', [])
+        body = json.loads(event["body"])
+        images = body.get("images", [])
         if not images:
-            return {"statusCode": 400, "body": json.dumps({"error": "No images provided."})}
-        
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": "No images provided."}),
+            }
+
         # Prepare the request for Claude 3 with multiple images
         content_array = []
         for image in images:
-            content_array.append({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": image['media_type'],  # e.g., 'image/png' or 'image/jpeg'
-                    "data": image['data'] # Base64-encoded image string
+            content_array.append(
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": image[
+                            "media_type"
+                        ],  # e.g., 'image/png' or 'image/jpeg'
+                        "data": image["data"],  # Base64-encoded image string
+                    },
                 }
-            })
-        
+            )
+
         # Add a text prompt
-        content_array.append({
-            "type": "text",
-            "text": f"{prompt} Additional Context:{body['text']}"
-        })
-        
+        content_array.append(
+            {"type": "text", "text": f"{prompt} Additional Context:{body['text']}"}
+        )
+
         # Define the API request payload
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": content_array
-                }
-            ]
+            "messages": [{"role": "user", "content": content_array}],
         }
-        
+
         # Call the Claude 3 Text and Vision model using Bedrock API
         response = bedrock_client.invoke_model(
-            modelId='anthropic.claude-3-sonnet-20240229-v1:0',
-            contentType='application/json',
-            accept='application/json',
-            body=json.dumps(payload)
+            modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+            contentType="application/json",
+            accept="application/json",
+            body=json.dumps(payload),
         )
-        
+
         # Parse the response
-        response_body = response['body'].read().decode('utf-8')
+        response_body = response["body"].read().decode("utf-8")
         model_output = json.loads(response_body)
-        model_output = model_output["content"][0]['text']
-        return {
-            "statusCode": 200,
-            "body": json.dumps(model_output)
-        }
-    
+        model_output = model_output["content"][0]["text"]
+        return {"statusCode": 200, "body": json.dumps(model_output)}
+
     except Exception as e:
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e)})
-        }
+        return {"statusCode": 500, "body": json.dumps({"error": str(e)})}

@@ -37,7 +37,7 @@
 
 - Python 3.8+
 - [Google Gemini API key](https://ai.google.dev/)
-- [OpenAI API key](https://platform.openai.com/) 
+- [OpenAI API key](https://platform.openai.com/)
 - Install dependencies:
   ```bash
   pip install -r requirements.txt

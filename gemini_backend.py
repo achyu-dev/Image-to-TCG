@@ -1,16 +1,15 @@
 from flask import Flask, request, jsonify
-import openai
 import google.generativeai as genai
 import os
 import base64
 
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY")) 
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 prompt = """
@@ -77,43 +76,35 @@ Expected Result: A confirmation message is displayed, and the profile informatio
 Now, using the provided screenshots, generate detailed test cases following the format and structure of these examples. Ensure each test case includes a clear Description, Pre-conditions, Testing Steps, and Expected Result.
 """
 
-@app.route('/gemini-generate', methods=['POST'])
+
+@app.route("/gemini-generate", methods=["POST"])
 def generate():
-    # try: 
-    #     data = request.get_json()
-    #     images = data.get('images', [])
-    #     text = data.get('text', '')
-
-    #     full_prompt = f"{prompt} Additional Context: {text}"
-
-    #     model = genai.GenerativeModel('gemini-2.5-flash')
-    #     response = model.generate_content(full_prompt)
-    #     output = response.text
-    #     return jsonify(output)
-    try: 
+    try:
         data = request.get_json()
-        images = data.get('images', [])
-        text = data.get('text', '')
+        images = data.get("images", [])
+        text = data.get("text", "")
 
         if not images:
-            return jsonify({"error": "No screenshots provided. Please upload at least one image."}), 400
+            return jsonify(
+                {"error": "No screenshots provided. Please upload at least one image."}
+            ), 400
 
         # Prepare media objects for Gemini
         gemini_media = []
         for img in images:
-            gemini_media.append({
-                "mime_type": img['media_type'],
-                "data": base64.b64decode(img['data'])
-            })
+            gemini_media.append(
+                {"mime_type": img["media_type"], "data": base64.b64decode(img["data"])}
+            )
 
         full_prompt = f"{prompt} Additional Context: {text}"
 
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel("gemini-2.5-flash")
         response = model.generate_content([full_prompt] + gemini_media)
         output = response.text
         return jsonify(output)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(port=8000)

@@ -1,15 +1,16 @@
 from flask import Flask, request, jsonify
-import openai
 from openai import OpenAI
 import os
 
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), organization='org-YyeND9hp39V5BwCwH2on9ico') 
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"), organization="org-YyeND9hp39V5BwCwH2on9ico"
+)
 
 
 prompt = """
@@ -75,24 +76,27 @@ Expected Result: A confirmation message is displayed, and the profile informatio
 
 Now, using the provided screenshots, generate detailed test cases following the format and structure of these examples. Ensure each test case includes a clear Description, Pre-conditions, Testing Steps, and Expected Result.
 """
-@app.route('/generate', methods=['POST'])
+
+
+@app.route("/generate", methods=["POST"])
 def generate():
-    try: 
+    try:
         data = request.get_json()
-        images = data.get('images', [])
-        text = data.get('text', '')
+        images = data.get("images", [])
+        text = data.get("text", "")
 
         full_prompt = f"{prompt} Additional Context: {text}"
 
         response = client.chat.completions.create(
             model="gpt-5-mini",
             messages=[{"role": "user", "content": full_prompt}],
-            max_tokens=1000
+            max_tokens=1000,
         )
-        output = response['choices'][0]['message']['content']
+        output = response["choices"][0]["message"]["content"]
         return jsonify(output)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run(port=8000)
