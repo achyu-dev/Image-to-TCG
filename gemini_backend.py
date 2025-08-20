@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 import base64
 
@@ -9,8 +10,8 @@ load_dotenv()
 
 app = Flask(__name__)
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
+# Create client with API key
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 prompt = """
 I am an experienced software tester tasked with creating comprehensive test cases for various functionalities of a digital product. I will provide you with multiple examples of test cases. Please follow these examples to generate similar detailed and professional test cases for the features visible in the provided screenshots.
@@ -37,7 +38,7 @@ Expected Result: The app displays a list of available buses for the chosen route
 Example Test Case 2: User Login Functionality
 Description: Ensures that the user can successfully log in with valid credentials.
 Pre-conditions:
-The app must be installed on the user’s device.
+The app must be installed on the user's device.
 The user must have an active account with a valid username and password.
 Testing Steps:
 Open the app on the device.
@@ -89,19 +90,25 @@ def generate():
                 {"error": "No screenshots provided. Please upload at least one image."}
             ), 400
 
-        # Prepare media objects for Gemini
-        gemini_media = []
+        # Prepare content list with prompt text and images
+        contents = [f"{prompt} Additional Context: {text}"]
+        
+        # Add images as Part objects using the new SDK
         for img in images:
-            gemini_media.append(
-                {"mime_type": img["media_type"], "data": base64.b64decode(img["data"])}
+            image_part = types.Part.from_bytes(
+                data=base64.b64decode(img["data"]),
+                mime_type=img["media_type"]
             )
+            contents.append(image_part)
 
-        full_prompt = f"{prompt} Additional Context: {text}"
-
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content([full_prompt] + gemini_media)
-        output = response.text
-        return jsonify(output)
+        # Generate content using the new SDK
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=contents
+        )
+        
+        return jsonify(response.text)
+        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
