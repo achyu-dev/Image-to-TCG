@@ -1,7 +1,6 @@
-import base64
-
-import requests
 import streamlit as st
+import requests
+import base64
 
 
 # Function to encode images to Base64
