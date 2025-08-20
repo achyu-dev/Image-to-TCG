@@ -1,5 +1,4 @@
 import json
-
 import boto3
 import botocore.config
 
@@ -94,7 +93,9 @@ def lambda_handler(event, context):
                     "type": "image",
                     "source": {
                         "type": "base64",
-                        "media_type": image["media_type"],  # e.g., 'image/png' or 'image/jpeg'
+                        "media_type": image[
+                            "media_type"
+                        ],  # e.g., 'image/png' or 'image/jpeg'
                         "data": image["data"],  # Base64-encoded image string
                     },
                 }

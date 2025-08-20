@@ -1,14 +1,16 @@
+from flask import Flask, request, jsonify
+from openai import OpenAI
 import os
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
-from openai import OpenAI
 
 load_dotenv()
 
 app = Flask(__name__)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), organization="org-YyeND9hp39V5BwCwH2on9ico")
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"), organization="org-YyeND9hp39V5BwCwH2on9ico"
+)
 
 
 prompt = """
