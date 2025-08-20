@@ -1,10 +1,10 @@
-from flask import Flask, request, jsonify
-from google import genai
-from google.genai import types
-import os
 import base64
+import os
 
 from dotenv import load_dotenv
+from flask import Flask, jsonify, request
+from google import genai
+from google.genai import types
 
 load_dotenv()
 
@@ -86,29 +86,26 @@ def generate():
         text = data.get("text", "")
 
         if not images:
-            return jsonify(
-                {"error": "No screenshots provided. Please upload at least one image."}
-            ), 400
+            return (
+                jsonify({"error": "No screenshots provided. Please upload at least one image."}),
+                400,
+            )
 
         # Prepare content list with prompt text and images
         contents = [f"{prompt} Additional Context: {text}"]
-        
+
         # Add images as Part objects using the new SDK
         for img in images:
             image_part = types.Part.from_bytes(
-                data=base64.b64decode(img["data"]),
-                mime_type=img["media_type"]
+                data=base64.b64decode(img["data"]), mime_type=img["media_type"]
             )
             contents.append(image_part)
 
         # Generate content using the new SDK
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=contents
-        )
-        
+        response = client.models.generate_content(model="gemini-2.5-flash", contents=contents)
+
         return jsonify(response.text)
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
