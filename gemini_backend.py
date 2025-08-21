@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 import base64
 
@@ -9,7 +10,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 prompt = """
@@ -85,21 +86,27 @@ def generate():
         text = data.get("text", "")
 
         if not images:
-            return jsonify(
-                {"error": "No screenshots provided. Please upload at least one image."}
-            ), 400
-
-        # Prepare media objects for Gemini
-        gemini_media = []
-        for img in images:
-            gemini_media.append(
-                {"mime_type": img["media_type"], "data": base64.b64decode(img["data"])}
+            return (
+                jsonify(
+                    {
+                        "error": "No screenshots provided. Please upload at least one image."
+                    }
+                ),
+                400,
             )
 
-        full_prompt = f"{prompt} Additional Context: {text}"
+        # Prepare media objects for Gemini
+        contents = [f"{prompt} Additional Context: {text}"]
 
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content([full_prompt] + gemini_media)
+        for img in images:
+            image_part = types.Part.from_bytes(
+                data=base64.b64decode(img["data"]), mime_type=img["media_type"]
+            )
+        contents.append(image_part)
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=contents
+        )
         output = response.text
         return jsonify(output)
     except Exception as e:
