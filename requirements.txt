@@ -1,7 +1,9 @@
 flask>=2.2.5
 google-genai
 openai>=1.0.0
+Pillow
 pre-commit
+python-docx>=0.8.11
 python-dotenv>=1.0.0
 requests>=2.31.0
 streamlit>=1.28.0
