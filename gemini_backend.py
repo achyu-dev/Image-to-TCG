@@ -12,7 +12,6 @@ app = Flask(__name__)
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-
 prompt = """
 I am an experienced software tester tasked with creating comprehensive test cases for various functionalities of a digital product. I will provide you with multiple examples of test cases. Please follow these examples to generate similar detailed and professional test cases for the features visible in the provided screenshots.
 For each test case, include the following:
