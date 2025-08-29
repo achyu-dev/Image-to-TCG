@@ -3,6 +3,7 @@ from google import genai
 from google.genai import types
 import os
 import base64
+import logging  # Added for better debugging
 
 from dotenv import load_dotenv
 
@@ -10,10 +11,14 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Setup logging (improvement: for debugging and monitoring)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-
-prompt = """
+# Improved prompt with more flexibility (improvement: allow dynamic context)
+BASE_PROMPT = """
 I am an experienced software tester tasked with creating comprehensive test cases for various functionalities of a digital product. I will provide you with multiple examples of test cases. Please follow these examples to generate similar detailed and professional test cases for the features visible in the provided screenshots.
 For each test case, include the following:
 Description: What the test case is about and which functionality is being tested.
@@ -38,7 +43,7 @@ Expected Result: The app displays a list of available buses for the chosen route
 Example Test Case 2: User Login Functionality
 Description: Ensures that the user can successfully log in with valid credentials.
 Pre-conditions:
-The app must be installed on the user’s device.
+The app must be installed on the user's device.
 The user must have an active account with a valid username and password.
 Testing Steps:
 Open the app on the device.
@@ -82,8 +87,11 @@ Now, using the provided screenshots, generate detailed test cases following the 
 def generate():
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({"error": "No JSON data provided."}), 400
+
         images = data.get("images", [])
-        text = data.get("text", "")
+        text = data.get("text", "").strip()  # Sanitize input
 
         if not images:
             return (
@@ -95,23 +103,34 @@ def generate():
                 400,
             )
 
-        # Prepare media objects for Gemini
-        contents = [f"{prompt} Additional Context: {text}"]
+        # Log request details for debugging
+        logger.info(
+            f"Processing request with {len(images)} images and text context: {text[:50]}..."
+        )
+
+        contents = [f"{BASE_PROMPT} Additional Context: {text}"]
 
         for img in images:
-            image_part = types.Part.from_bytes(
-                data=base64.b64decode(img["data"]), mime_type=img["media_type"]
-            )
-        contents.append(image_part)
+            try:
+                image_part = types.Part.from_bytes(
+                    data=base64.b64decode(img["data"]), mime_type=img["media_type"]
+                )
+                contents.append(image_part)
+            except Exception as e:
+                logger.error(f"Error processing image: {str(e)}")
+                return jsonify({"error": f"Invalid image data: {str(e)}"}), 400
 
+        # Improvement: Add retry logic or rate-limiting hints if needed
         response = client.models.generate_content(
             model="gemini-2.5-flash", contents=contents
         )
         output = response.text
+        logger.info("Test cases generated successfully.")
         return jsonify(output)
     except Exception as e:
+        logger.error(f"Error in generate function: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(port=8000)
+    app.run(port=8000, debug=True)  # Improvement: Enable debug mode for development
