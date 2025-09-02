@@ -5,6 +5,8 @@ from docx import Document
 from docx.shared import Inches
 from io import BytesIO
 
+#Trial commnet - ignore this
+
 # Constants for better maintainability
 API_URL = "http://localhost:8000/gemini-generate"
 MAX_IMAGE_SIZE_MB = 10  # Example: Limit image size to prevent issues
