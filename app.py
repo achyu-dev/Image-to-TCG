@@ -5,7 +5,7 @@ from docx import Document
 from docx.shared import Inches
 from io import BytesIO
 
-#Trial commnet - ignore this
+#Trial commnet - ignore this 2025
 
 # Constants for better maintainability
 API_URL = "http://localhost:8000/gemini-generate"
